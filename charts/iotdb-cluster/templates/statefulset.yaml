@@ -1,0 +1,194 @@
+{{- $replicaCount := int .Values.replicaCount -}}
+{{- $releaseNamespace := .Release.Namespace -}}
+{{- $clusterDomain := .Values.clusterDomain -}}
+{{- $fullname := include "iotdb.fullname" . -}}
+{{- $servicePort := int .Values.internal.meta.port -}}
+{{- $serverList := list }}
+{{- range $e, $i := until $replicaCount }}
+{{- $serverList = append $serverList (printf "%s-%d.%s-headless.%s.svc.%s:%d" $fullname $i $fullname $releaseNamespace $clusterDomain $servicePort) }}
+{{- end }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "iotdb.fullname" . }}
+  labels:
+    {{- include "iotdb.labels" . | nindent 4 }}
+spec:
+  replicas: {{ $replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "iotdb.selectorLabels" . | nindent 6 }}
+  serviceName: {{ template "iotdb.fullname" . }}-headless
+  podManagementPolicy: {{ .Values.podManagementPolicy }}
+  updateStrategy:
+    type: {{ .Values.updateStrategy }}
+  template:
+    metadata:
+      annotations:
+      {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.cmOverride }}
+        configchecksum: {{ .Files.Get "files/conf/iotdb-cluster.properties" | sha256sum | trunc 63 }}
+      {{- end }}
+      labels:
+        {{- include "iotdb.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "iotdb.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      initContainers:
+        - name: sed-conf
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          env:
+            - name: INTERNAL_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+          command:
+            - '/bin/sh'
+            - '-c'
+          args:
+            - |
+            {{- if eq $replicaCount 1 }}
+              sed -i 's/^seed_nodes.*$/seed_nodes=127.0.0.1:9003/g' /iotdb/conf/iotdb-cluster.properties;
+            {{ else }}
+              sed -i "s/^internal_ip.*$/internal_ip=${INTERNAL_IP}/g" /iotdb/conf/iotdb-cluster.properties;
+              sed -i 's/^seed_nodes.*$/seed_nodes={{ join "," $serverList }}/g' /iotdb/conf/iotdb-cluster.properties;
+            {{- end }}
+              sed -i 's/^default_replica_num.*$/default_replica_num={{ $replicaCount }}/g' /iotdb/conf/iotdb-cluster.properties;
+              cp -R /iotdb/conf/* /iotdb/conf-cluster/;
+          volumeMounts:
+            - name: iotdb-conf
+              mountPath: /iotdb/conf-cluster
+          securityContext:
+            privileged: true
+            runAsUser: 0
+        - name: increase-fd-ulimit
+          image: busybox:1.33.1
+          command: ["/bin/sh", "-c"]
+          args:
+            - ulimit -n 65535
+          securityContext:
+            privileged: true
+            runAsUser: 0
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: rpc
+              containerPort: {{ .Values.rpc.port }}
+            - name: jmx
+              containerPort: 31999
+            - name: sync
+              containerPort: 5555
+            - name: monitor
+              containerPort: 8181
+            - name: inte-meta
+              containerPort: {{ $servicePort }}
+            - name: inte-meta-hb
+              containerPort: {{ add $servicePort 1 }}
+            - name: inte-data
+              containerPort: {{ .Values.internal.data.port }}
+            - name: inte-data-hb
+              containerPort: {{ add .Values.internal.data.port 1 }}
+          {{- if .Values.livenessProbe.enabled }}
+          livenessProbe:
+            tcpSocket:
+              port: 6667
+            initialDelaySeconds: {{ .Values.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.livenessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.livenessProbe.timeoutSeconds }}
+            successThreshold: {{ .Values.livenessProbe.successThreshold }}
+            failureThreshold: {{ .Values.livenessProbe.failureThreshold }}
+          {{- end }}
+          {{- if .Values.readinessProbe.enabled }}
+          readinessProbe:
+            tcpSocket:
+              port: 6667
+            initialDelaySeconds: {{ .Values.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.readinessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.readinessProbe.timeoutSeconds }}
+            successThreshold: {{ .Values.readinessProbe.successThreshold }}
+            failureThreshold: {{ .Values.readinessProbe.failureThreshold }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: iotdb-conf
+              mountPath: /iotdb/conf
+            {{- if .Values.persistence.enabled }}
+            - mountPath: /iotdb/data
+              name: data
+            {{- end }}
+            {{- if (.Files.Glob "files/conf/**") }}
+            {{ range $path, $bytes := .Files.Glob "files/conf/**" }}
+            - name: iotdb-conf-override
+              mountPath: {{ print "/iotdb/conf/" ($path | replace "files/conf/" "") }}
+              subPath: {{ $path | replace "files/conf/" "" | b64enc | replace "=" "-" }}
+            {{- end }}
+            {{- end }}
+      volumes:
+        - name: iotdb-conf
+          emptyDir: {}
+        {{- if (.Files.Glob "files/conf/**") }}
+        - name: iotdb-conf-override
+          configMap:
+            name: {{ template "iotdb.fullname" . }}-conf-override-cm
+        {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if or (eq .Values.antiAffinity "hard") (eq .Values.antiAffinity "soft") .Values.nodeAffinity }}
+      affinity:
+        {{- if eq .Values.antiAffinity "hard" }}
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: app
+                    operator: In
+                    values:
+                      - "{{ template "iotdb.fullname" . }}"
+              topologyKey: {{ .Values.antiAffinityTopologyKey }}
+        {{- else if eq .Values.antiAffinity "soft" }}
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 1
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app
+                      operator: In
+                      values:
+                        - "{{ template "iotdb.fullname" . }}"
+                topologyKey: {{ .Values.antiAffinityTopologyKey }}
+        {{- end }}
+        {{- with .Values.nodeAffinity }}
+        nodeAffinity:
+          {{ toYaml . | nindent 10 }}
+        {{- end }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+  {{- if .Values.persistence.enabled }}
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+        {{- with .Values.persistence.annotations  }}
+        annotations:
+          {{ toYaml . | nindent 10 }}
+        {{- end }}
+      spec:
+        {{ toYaml .Values.volumeClaimTemplate | nindent 8 }}
+  {{- end }}

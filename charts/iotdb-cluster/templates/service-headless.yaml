@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "iotdb.fullname" . }}-headless
+  labels:
+    {{- include "iotdb.labels" . | nindent 4 }}
+  annotations:
+    service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
+spec:
+  clusterIP: None
+  publishNotReadyAddresses: true
+  type: ClusterIP
+  ports:
+    - name: inte-meta
+      port: {{ .Values.internal.meta.port }}
+      targetPort: {{ .Values.internal.meta.port }}
+    - name: inte-meta-hb
+      port: {{ add .Values.internal.meta.port 1 }}
+      targetPort: {{ add .Values.internal.meta.port 1 }}
+    - name: inte-data
+      port: {{ .Values.internal.data.port }}
+      targetPort: {{ .Values.internal.data.port }}
+    - name: inte-data-hb
+      port: {{ add .Values.internal.data.port 1 }}
+      targetPort: {{ add .Values.internal.data.port 1 }}
+  selector:
+    {{- include "iotdb.selectorLabels" . | nindent 4 }}

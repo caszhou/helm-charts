@@ -1,0 +1,13 @@
+{{- if (.Files.Glob "files/conf/**") }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "iotdb.fullname" . }}-conf-override-cm
+  labels:
+    {{- include "iotdb.labels" . | nindent 4 }}
+binaryData:
+  {{ range $path, $bytes := .Files.Glob "files/conf/**" }}
+    {{- $path | replace "files/conf/" "" | b64enc | replace "=" "-" | indent 2 }}: |
+    {{ $.Files.Get $path | b64enc | indent 4 }}
+  {{ end }}
+{{ end }}
