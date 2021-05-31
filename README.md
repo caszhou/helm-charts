@@ -14,7 +14,7 @@ volumeClaimTemplate:
   resources:
     requests:
       storage: 30Gi
-  storageClassName: iotdb
+  storageClassName: iotdb-single
 
 service:
   type: NodePort
@@ -33,7 +33,7 @@ volumeClaimTemplate:
   resources:
     requests:
       storage: 30Gi
-  storageClassName: iotdb
+  storageClassName: iotdb-cluster
 
 service:
   type: NodePort
@@ -43,3 +43,6 @@ service:
 
 # Storage
 you can use static pv or dynamic pv, more details please see https://kubernetes.io/docs/concepts/storage/persistent-volumes/
+
+# About cluster chart
+after one pod is restarted, the cluster cannot be used.

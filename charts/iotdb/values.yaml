@@ -49,16 +49,16 @@ serviceAccount:
 
 livenessProbe:
   enabled: true
-  initialDelaySeconds: 30
-  periodSeconds: 10
+  initialDelaySeconds: 10
+  periodSeconds: 30
   timeoutSeconds: 5
   successThreshold: 1
   failureThreshold: 5
 
 readinessProbe:
   enabled: true
-  initialDelaySeconds: 30
-  periodSeconds: 10
+  initialDelaySeconds: 10
+  periodSeconds: 30
   timeoutSeconds: 5
   successThreshold: 1
   failureThreshold: 5

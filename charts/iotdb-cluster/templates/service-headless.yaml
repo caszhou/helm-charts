@@ -23,5 +23,8 @@ spec:
     - name: inte-data-hb
       port: {{ add .Values.internal.data.port 1 }}
       targetPort: {{ add .Values.internal.data.port 1 }}
+    - name: rpc
+      port: {{ .Values.rpc.port }}
+      targetPort: {{ .Values.rpc.port }}
   selector:
     {{- include "iotdb.selectorLabels" . | nindent 4 }}

@@ -20,7 +20,7 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       {{- if .Values.cmOverride }}
-        configchecksum: {{ .Files.Get "files/conf/README.md" | sha256sum | trunc 63 }}
+        configchecksum: {{ .Files.Get "files/conf/iotdb-engine.properties" | sha256sum | trunc 63 }}
       {{- end }}
       labels:
         {{- include "iotdb.selectorLabels" . | nindent 8 }}

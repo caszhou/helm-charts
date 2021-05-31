@@ -45,10 +45,10 @@ spec:
         - name: sed-conf
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           env:
-            - name: INTERNAL_IP
+            - name: POD_NAME
               valueFrom:
                 fieldRef:
-                  fieldPath: status.podIP
+                  fieldPath: metadata.name
           command:
             - '/bin/sh'
             - '-c'
@@ -57,7 +57,7 @@ spec:
             {{- if eq $replicaCount 1 }}
               sed -i 's/^seed_nodes.*$/seed_nodes=127.0.0.1:9003/g' /iotdb/conf/iotdb-cluster.properties;
             {{ else }}
-              sed -i "s/^internal_ip.*$/internal_ip=${INTERNAL_IP}/g" /iotdb/conf/iotdb-cluster.properties;
+              sed -i "s/^internal_ip.*$/internal_ip=${POD_NAME}.{{ printf "%s-headless.%s.svc.%s" $fullname $releaseNamespace $clusterDomain }}/g" /iotdb/conf/iotdb-cluster.properties;
               sed -i 's/^seed_nodes.*$/seed_nodes={{ join "," $serverList }}/g' /iotdb/conf/iotdb-cluster.properties;
             {{- end }}
               sed -i 's/^default_replica_num.*$/default_replica_num={{ $replicaCount }}/g' /iotdb/conf/iotdb-cluster.properties;
