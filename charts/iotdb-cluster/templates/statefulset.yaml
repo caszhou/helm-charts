@@ -44,6 +44,7 @@ spec:
       initContainers:
         - name: sed-conf
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
             - name: POD_NAME
               valueFrom:

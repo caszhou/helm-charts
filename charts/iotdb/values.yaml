@@ -100,3 +100,40 @@ volumeClaimTemplate: {}
 service:
   type: ClusterIP
   nodePort: null
+
+grafana:
+  enable: false
+  podAnnotations: []
+  config:
+    url:
+    username:
+    password:
+  image:
+    repository:
+    pullPolicy:
+    tag:
+  imagePullSecrets: []
+  tomcat:
+    port: 8888
+  livenessProbe:
+    enabled: true
+    initialDelaySeconds: 10
+    periodSeconds: 30
+    timeoutSeconds: 5
+    successThreshold: 1
+    failureThreshold: 5
+  readinessProbe:
+    enabled: true
+    initialDelaySeconds: 10
+    periodSeconds: 30
+    timeoutSeconds: 5
+    successThreshold: 1
+    failureThreshold: 5
+  resources: {}
+  nodeSelector: {}
+  nodeAffinity: {}
+  tolerations: []
+
+
+
+

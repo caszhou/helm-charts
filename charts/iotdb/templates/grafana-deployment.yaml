@@ -1,0 +1,99 @@
+{{- if .Values.grafana.enable }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "iotdb-grafana.fullname" . }}
+  labels:
+    {{- include "iotdb-grafana.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "iotdb-grafana.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+      {{- with .Values.grafana.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "iotdb-grafana.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.grafana.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      initContainers:
+        - name: sed-application-properties
+          image: "{{ .Values.grafana.image.repository }}:{{ .Values.grafana.image.tag }}"
+          imagePullPolicy: {{ .Values.grafana.image.pullPolicy }}
+          command:
+            - '/bin/sh'
+            - '-c'
+          args:
+            - |
+              sed -i 's#^spring.datasource.url.*$#spring.datasource.url={{ .Values.grafana.config.url }}#g' /iotdb-grafana/application.properties;
+              sed -i 's#^spring.datasource.username.*$#spring.datasource.username={{ .Values.grafana.config.username }}#g' /iotdb-grafana/application.properties;
+              sed -i 's#^spring.datasource.password.*$#spring.datasource.username={{ .Values.grafana.config.password }}#g' /iotdb-grafana/application.properties;
+              cp -R /iotdb-grafana/* /iotdb-grafana-sed/;
+          volumeMounts:
+            - name: application-properties
+              mountPath: /iotdb-grafana-sed
+          securityContext:
+            privileged: true
+            runAsUser: 0
+        - name: wait-for-iotdb
+          image: busybox:1.33.1
+          imagePullPolicy: IfNotPresent
+          command: ['sh', '-c', 'for i in $(seq 1 10); do nc -v -z -w3 {{ include "iotdb.fullname" . }} {{ .Values.rpc.port }} && exit 0 || sleep 5; done; exit 1']
+      containers:
+        - name: {{ print .Chart.Name "-grafana" }}
+          image: "{{ .Values.grafana.image.repository }}:{{ .Values.grafana.image.tag }}"
+          imagePullPolicy: {{ .Values.grafana.image.pullPolicy }}
+          ports:
+            - name: tomcat
+              containerPort: {{ .Values.grafana.tomcat.port }}
+          {{- if .Values.grafana.livenessProbe.enabled }}
+          livenessProbe:
+            tcpSocket:
+              port: {{ .Values.grafana.tomcat.port }}
+            initialDelaySeconds: {{ .Values.grafana.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.grafana.livenessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.grafana.livenessProbe.timeoutSeconds }}
+            successThreshold: {{ .Values.grafana.livenessProbe.successThreshold }}
+            failureThreshold: {{ .Values.grafana.livenessProbe.failureThreshold }}
+          {{- end }}
+          {{- if .Values.grafana.readinessProbe.enabled }}
+          readinessProbe:
+            tcpSocket:
+              port: {{ .Values.grafana.tomcat.port }}
+            initialDelaySeconds: {{ .Values.grafana.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.grafana.readinessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.grafana.readinessProbe.timeoutSeconds }}
+            successThreshold: {{ .Values.grafana.readinessProbe.successThreshold }}
+            failureThreshold: {{ .Values.grafana.readinessProbe.failureThreshold }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.grafana.resources | nindent 12 }}
+          volumeMounts:
+            - name: application-properties
+              mountPath: /iotdb-grafana
+      volumes:
+        - name: application-properties
+          emptyDir: {}
+      {{- with .Values.grafana.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.grafana.nodeAffinity }}
+      affinity:
+        {{- with .Values.grafana.nodeAffinity }}
+        nodeAffinity:
+          {{ toYaml . | nindent 10 }}
+        {{- end }}
+      {{- end }}
+      {{- with .Values.grafana.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }}

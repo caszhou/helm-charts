@@ -1,0 +1,16 @@
+{{- if .Values.grafana.enable }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "iotdb-grafana.fullname" . }}
+  labels:
+    {{- include "iotdb-grafana.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+    - name: tomcat
+      port: {{ .Values.grafana.tomcat.port }}
+      targetPort: {{ .Values.grafana.tomcat.port }}
+  selector:
+    {{- include "iotdb-grafana.selectorLabels" . | nindent 4 }}
+{{- end }}
