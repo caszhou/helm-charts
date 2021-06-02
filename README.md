@@ -1,7 +1,7 @@
-# helm-charts
+# Helm charts
 helm charts for iotdb
 
-# single values
+# Single mode values
 ```yaml
 nameOverride: "iotdb"
 fullnameOverride: "iotdb"
@@ -21,7 +21,7 @@ service:
   nodePort: 36667
 ```
 
-# iotdb-grafana with single iotdb
+# Single mode with iotdb grafana
 ```yaml
 grafana:
   enable: true
@@ -52,7 +52,14 @@ grafana:
       effect: NoExecute
 ```
 
-# cluster
+# Single mode with iotdb metric service node port
+```yaml
+metricService:
+  type: NodePort
+  nodePort: 38181
+```
+
+# Cluster mode
 ```yaml
 replicaCount: 3
 
@@ -75,4 +82,4 @@ service:
 you can use static pv or dynamic pv, more details please see https://kubernetes.io/docs/concepts/storage/persistent-volumes/
 
 # About cluster chart
-after one pod is restarted, the cluster cannot be used.
+after one pod restarted, the cluster cannot be used, so now iotdb cluster on k8s is not ready for prod.

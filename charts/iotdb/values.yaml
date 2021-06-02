@@ -9,6 +9,8 @@ clusterDomain: cluster.local
 
 rpc:
   port: 6667
+metric:
+  port: 8181
 
 cmOverride: true
 
@@ -98,6 +100,10 @@ tolerations: []
 volumeClaimTemplate: {}
 
 service:
+  type: ClusterIP
+  nodePort: null
+
+metricService:
   type: ClusterIP
   nodePort: null
 
