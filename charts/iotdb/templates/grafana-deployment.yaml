@@ -45,7 +45,7 @@ spec:
         - name: wait-for-iotdb
           image: busybox:1.33.1
           imagePullPolicy: IfNotPresent
-          command: ['sh', '-c', 'for i in $(seq 1 10); do nc -v -z -w3 {{ include "iotdb.fullname" . }} {{ .Values.rpc.port }} && exit 0 || sleep 5; done; exit 1']
+          command: ['sh', '-c', 'for i in $(seq 1 60); do nc -v -z -w3 {{ include "iotdb.fullname" . }} {{ .Values.rpc.port }} && exit 0 || sleep 5; done; exit 1']
       containers:
         - name: {{ print .Chart.Name "-grafana" }}
           image: "{{ .Values.grafana.image.repository }}:{{ .Values.grafana.image.tag }}"

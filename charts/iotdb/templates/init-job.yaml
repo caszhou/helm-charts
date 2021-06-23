@@ -1,0 +1,88 @@
+{{- if (.Files.Glob "files/sbin/init.sh") }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "iotdb.fullname" . }}-init-db
+  labels:
+    {{- include "iotdb.labels" . | nindent 4 }}
+spec:
+  completions: 1
+  parallelism: 1
+  backoffLimit: 0
+  ttlSecondsAfterFinished: 0
+  template:
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "iotdb.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      initContainers:
+        - name: wait-for-iotdb
+          image: busybox:1.33.1
+          imagePullPolicy: IfNotPresent
+          command: ['sh', '-c', 'for i in $(seq 1 60); do nc -v -z -w3 {{ include "iotdb.fullname" . }} {{ .Values.rpc.port }} && exit 0 || sleep 5; done; exit 1']
+      restartPolicy: Never
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["/bin/sh"]
+          args: ["/iotdb/sbin/init.sh"]
+          volumeMounts:
+            {{- if (.Files.Glob "files/sbin/init.sh") }}
+            {{ range $path, $bytes := .Files.Glob "files/sbin/init.sh" }}
+            - name: iotdb-init-db
+              mountPath: {{ print "/iotdb/sbin/" ($path | replace "files/sbin/" "") }}
+              subPath: {{ $path | replace "files/sbin/" "" | b64enc | replace "=" "-" }}
+            {{- end }}
+            {{- end }}
+      volumes:
+        {{- if (.Files.Glob "files/sbin/init.sh") }}
+        - name: iotdb-init-db
+          configMap:
+            name: {{ template "iotdb.fullname" . }}-init-db-cm
+        {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if or (eq .Values.antiAffinity "hard") (eq .Values.antiAffinity "soft") .Values.nodeAffinity }}
+      affinity:
+        {{- if eq .Values.antiAffinity "hard" }}
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: app
+                    operator: In
+                    values:
+                      - "{{ template "iotdb.fullname" . }}"
+              topologyKey: {{ .Values.antiAffinityTopologyKey }}
+        {{- else if eq .Values.antiAffinity "soft" }}
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 1
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app
+                      operator: In
+                      values:
+                        - "{{ template "iotdb.fullname" . }}"
+                topologyKey: {{ .Values.antiAffinityTopologyKey }}
+        {{- end }}
+        {{- with .Values.nodeAffinity }}
+        nodeAffinity:
+          {{ toYaml . | nindent 10 }}
+        {{- end }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }}

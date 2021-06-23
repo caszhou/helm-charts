@@ -19,8 +19,11 @@ spec:
       {{- with .Values.podAnnotations }}
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- if .Values.cmOverride }}
-        configchecksum: {{ .Files.Get "files/conf/iotdb-engine.properties" | sha256sum | trunc 63 }}
+      {{- if (.Files.Glob "files/conf/**.properties") }}
+        iotdbEnginePropertiesChecksum: {{ .Files.Get "files/conf/iotdb-engine.properties" | sha256sum | trunc 63 }}
+      {{- end }}
+      {{- if (.Files.Glob "files/ext/udf/**.jar") }}
+        ivcIotdbUdfJarChecksum: {{ .Files.Get "files/ext/udf/ivc-iotdb-udf-0.12.1.jar" | sha256sum | trunc 63 }}
       {{- end }}
       labels:
         {{- include "iotdb.selectorLabels" . | nindent 8 }}
@@ -83,18 +86,30 @@ spec:
             - mountPath: /iotdb/data
               name: data
             {{- end }}
-            {{- if (.Files.Glob "files/conf/**") }}
-            {{ range $path, $bytes := .Files.Glob "files/conf/**" }}
+            {{- if (.Files.Glob "files/conf/**.properties") }}
+            {{ range $path, $bytes := .Files.Glob "files/conf/**.properties" }}
             - name: iotdb-conf-override
               mountPath: {{ print "/iotdb/conf/" ($path | replace "files/conf/" "") }}
               subPath: {{ $path | replace "files/conf/" "" | b64enc | replace "=" "-" }}
             {{- end }}
             {{- end }}
+            {{- if (.Files.Glob "files/ext/udf/**.jar") }}
+            {{ range $path, $bytes := .Files.Glob "files/ext/udf/**.jar" }}
+            - name: iotdb-ext-udf
+              mountPath: {{ print "/iotdb/ext/udf/" ($path | replace "files/ext/udf/" "") }}
+              subPath: {{ $path | replace "files/ext/udf/" "" | b64enc | replace "=" "-" }}
+            {{- end }}
+            {{- end }}
       volumes:
-        {{- if (.Files.Glob "files/conf/**") }}
+        {{- if (.Files.Glob "files/conf/**.properties") }}
         - name: iotdb-conf-override
           configMap:
             name: {{ template "iotdb.fullname" . }}-conf-override-cm
+        {{- end }}
+        {{- if (.Files.Glob "files/ext/udf/**.jar") }}
+        - name: iotdb-ext-udf
+          configMap:
+            name: {{ template "iotdb.fullname" . }}-ext-udf-cm
         {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:

@@ -12,8 +12,6 @@ rpc:
 metric:
   port: 8181
 
-cmOverride: true
-
 # The default is to deploy all pods serially. By setting this to parallel all pods are started at
 # the same time when bootstrapping the cluster
 podManagementPolicy: "Parallel"
@@ -38,7 +36,7 @@ image:
   repository: apache/iotdb
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: 0.12.0-node
+  tag: 0.12.1-node
 
 serviceAccount:
   # Specifies whether a service account should be created

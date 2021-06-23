@@ -28,13 +28,13 @@ grafana:
   config:
     url: jdbc:iotdb://iotdb-0.iotdb-headless.middleware.svc.cluster.local:6667/
     username: root
-    password: iotdb@IVC
+    password: root
   image:
     # replace your iotdb-grafana docker image
     # application path: /iotdb-grafana
     repository: registry-vpc.cn-hangzhou.aliyuncs.com/ivehcore-base/iotdb-grafana
     pullPolicy: IfNotPresent
-    tag: 0.12.0-v2
+    tag: 0.12.1
   imagePullSecrets:
     - name: docker-vpc
   nodeAffinity:
