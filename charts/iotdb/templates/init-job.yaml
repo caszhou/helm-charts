@@ -1,3 +1,7 @@
+{{- $fullname := include "iotdb.fullname" . -}}
+{{- $releaseNamespace := .Release.Namespace -}}
+{{- $clusterDomain := .Values.clusterDomain -}}
+{{- $servicePort := int .Values.rpc.port -}}
 {{- if (.Files.Glob "files/sbin/init.sh") }}
 apiVersion: batch/v1
 kind: Job
@@ -33,6 +37,15 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           command: ["/bin/sh"]
           args: ["/iotdb/sbin/init.sh"]
+          env:
+            - name: host
+              value: "{{ printf "%s-%d.%s-headless.%s.svc.%s" $fullname 0 $fullname $releaseNamespace $clusterDomain }}"
+            - name: port
+              value: "{{ $servicePort }}"
+            - name: user
+              value: "root"
+            - name: password
+              value: "iotdb@IVC"
           volumeMounts:
             {{- if (.Files.Glob "files/sbin/init.sh") }}
             {{ range $path, $bytes := .Files.Glob "files/sbin/init.sh" }}

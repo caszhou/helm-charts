@@ -59,6 +59,10 @@ spec:
               containerPort: 5555
             - name: monitor
               containerPort: 8181
+          {{- if .Values.env }}
+          env:
+            {{- toYaml .Values.env | nindent 12 }}
+          {{- end }}
           {{- if .Values.livenessProbe.enabled }}
           livenessProbe:
             tcpSocket:

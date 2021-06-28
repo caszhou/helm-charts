@@ -1,10 +1,8 @@
 #!/bin/bash
 
-host=iotdb-0.iotdb-headless.middleware.svc.cluster.local
-rpcPort=6667
-user=root
-pass=iotdb@IVC
+set -ex
 
-/iotdb/sbin/start-cli.sh -h ${host} -p ${rpcPort} -u ${user} -pw ${pass} -e "create function median as 'com.ivc.tool.iotdb.udf.UDTFMedian'"
+/iotdb/sbin/start-cli.sh -h ${host} -p ${port} -u ${user} -pw root -e "alter user root set password 'iotdb@IVC'"
+/iotdb/sbin/start-cli.sh -h ${host} -p ${port} -u ${user} -pw ${password} -e "create function median as 'com.ivc.tool.iotdb.udf.UDTFMedian'"
 
 exit $?
