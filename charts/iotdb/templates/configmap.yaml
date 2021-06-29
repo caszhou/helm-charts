@@ -12,6 +12,20 @@ binaryData:
   {{ end }}
 {{ end }}
 ---
+{{- if (.Files.Glob "files/conf/**.sh") }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "iotdb.fullname" . }}-conf-sh-override-cm
+  labels:
+    {{- include "iotdb.labels" . | nindent 4 }}
+binaryData:
+  {{ range $path, $bytes := .Files.Glob "files/conf/**.sh" }}
+    {{- $path | replace "files/conf/" "" | b64enc | replace "=" "-" | indent 2 }}: |
+    {{ $.Files.Get $path | b64enc | indent 4 }}
+  {{ end }}
+{{ end }}
+---
 {{- if (.Files.Glob "files/ext/udf/**.jar") }}
 apiVersion: v1
 kind: ConfigMap
@@ -26,7 +40,7 @@ binaryData:
   {{ end }}
 {{ end }}
 ---
-{{- if (.Files.Glob "files/sbin/init.sh") }}
+{{- if (.Files.Glob "files/initdb.d/init.sh") }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -34,7 +48,21 @@ metadata:
   labels:
     {{- include "iotdb.labels" . | nindent 4 }}
 binaryData:
-  {{ range $path, $bytes := .Files.Glob "files/sbin/init.sh" }}
+  {{ range $path, $bytes := .Files.Glob "files/initdb.d/init.sh" }}
+    {{- $path | replace "files/initdb.d/" "" | b64enc | replace "=" "-" | indent 2 }}: |
+    {{ $.Files.Get $path | b64enc | indent 4 }}
+  {{ end }}
+{{ end }}
+---
+{{- if (.Files.Glob "files/sbin/**.sh") }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "iotdb.fullname" . }}-sbin-override-cm
+  labels:
+    {{- include "iotdb.labels" . | nindent 4 }}
+binaryData:
+  {{ range $path, $bytes := .Files.Glob "files/sbin/**.sh" }}
     {{- $path | replace "files/sbin/" "" | b64enc | replace "=" "-" | indent 2 }}: |
     {{ $.Files.Get $path | b64enc | indent 4 }}
   {{ end }}

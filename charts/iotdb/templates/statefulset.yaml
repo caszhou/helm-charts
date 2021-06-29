@@ -19,11 +19,14 @@ spec:
       {{- with .Values.podAnnotations }}
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- if (.Files.Glob "files/conf/**.properties") }}
+      {{- if (.Files.Glob "files/conf/iotdb-engine.properties") }}
         iotdbEnginePropertiesChecksum: {{ .Files.Get "files/conf/iotdb-engine.properties" | sha256sum | trunc 63 }}
       {{- end }}
-      {{- if (.Files.Glob "files/ext/udf/**.jar") }}
+      {{- if (.Files.Glob "files/ext/udf/ivc-iotdb-udf-0.12.1.jar") }}
         ivcIotdbUdfJarChecksum: {{ .Files.Get "files/ext/udf/ivc-iotdb-udf-0.12.1.jar" | sha256sum | trunc 63 }}
+      {{- end }}
+      {{- if (.Files.Glob "files/sbin/start-server.sh") }}
+        startServerShChecksum: {{ .Files.Get "files/sbin/start-server.sh" | sha256sum | trunc 63 }}
       {{- end }}
       labels:
         {{- include "iotdb.selectorLabels" . | nindent 8 }}
@@ -97,11 +100,25 @@ spec:
               subPath: {{ $path | replace "files/conf/" "" | b64enc | replace "=" "-" }}
             {{- end }}
             {{- end }}
+            {{- if (.Files.Glob "files/conf/**.sh") }}
+            {{ range $path, $bytes := .Files.Glob "files/conf/**.sh" }}
+            - name: iotdb-conf-sh-override
+              mountPath: {{ print "/iotdb/conf/" ($path | replace "files/conf/" "") }}
+              subPath: {{ $path | replace "files/conf/" "" | b64enc | replace "=" "-" }}
+            {{- end }}
+            {{- end }}
             {{- if (.Files.Glob "files/ext/udf/**.jar") }}
             {{ range $path, $bytes := .Files.Glob "files/ext/udf/**.jar" }}
             - name: iotdb-ext-udf
               mountPath: {{ print "/iotdb/ext/udf/" ($path | replace "files/ext/udf/" "") }}
               subPath: {{ $path | replace "files/ext/udf/" "" | b64enc | replace "=" "-" }}
+            {{- end }}
+            {{- end }}
+            {{- if (.Files.Glob "files/sbin/**.sh") }}
+            {{ range $path, $bytes := .Files.Glob "files/sbin/**.sh" }}
+            - name: iotdb-sbin-override
+              mountPath: {{ print "/iotdb/sbin/" ($path | replace "files/sbin/" "") }}
+              subPath: {{ $path | replace "files/sbin/" "" | b64enc | replace "=" "-" }}
             {{- end }}
             {{- end }}
       volumes:
@@ -110,10 +127,22 @@ spec:
           configMap:
             name: {{ template "iotdb.fullname" . }}-conf-override-cm
         {{- end }}
+        {{- if (.Files.Glob "files/conf/**.sh") }}
+        - name: iotdb-conf-sh-override
+          configMap:
+            name: {{ template "iotdb.fullname" . }}-conf-sh-override-cm
+            defaultMode: 0777
+        {{- end }}
         {{- if (.Files.Glob "files/ext/udf/**.jar") }}
         - name: iotdb-ext-udf
           configMap:
             name: {{ template "iotdb.fullname" . }}-ext-udf-cm
+        {{- end }}
+        {{- if (.Files.Glob "files/sbin/**.sh") }}
+        - name: iotdb-sbin-override
+          configMap:
+            name: {{ template "iotdb.fullname" . }}-sbin-override-cm
+            defaultMode: 0777
         {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:

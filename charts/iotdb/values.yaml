@@ -47,9 +47,7 @@ serviceAccount:
   # If not set and create is true, a name is generated using the fullname template
   name: ""
 
-env:
-  - name: IOTDB_JMX_OPTS
-    value: "-XX:MaxDirectMemorySize=4G"
+env: {}
 
 livenessProbe:
   enabled: true

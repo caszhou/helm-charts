@@ -1,2 +1,2 @@
-# init sh
-you can put your script in this folder to init db.
+# sbin override
+you can put your script in this folder to override.

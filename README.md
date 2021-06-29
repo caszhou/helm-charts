@@ -59,6 +59,17 @@ metricService:
   nodePort: 38181
 ```
 
+# Config your self jmv options
+```yaml
+env:
+  - name: ENABLE_CALCULATE_HEAP_SIZES
+    value: "false"
+  - name: MAX_HEAP_SIZE
+    value: "16G"
+  - name: HEAP_NEWSIZE
+    value: "4G"
+```
+
 # Cluster mode
 ```yaml
 replicaCount: 3
