@@ -68,6 +68,8 @@ env:
     value: "16G"
   - name: HEAP_NEWSIZE
     value: "4G"
+  - name: MAX_DIRECT_MEMORY_SIZE
+    value: "10G"
 ```
 
 # Cluster mode

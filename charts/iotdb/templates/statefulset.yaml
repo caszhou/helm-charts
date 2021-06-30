@@ -22,6 +22,9 @@ spec:
       {{- if (.Files.Glob "files/conf/iotdb-engine.properties") }}
         iotdbEnginePropertiesChecksum: {{ .Files.Get "files/conf/iotdb-engine.properties" | sha256sum | trunc 63 }}
       {{- end }}
+      {{- if (.Files.Glob "files/conf/iotdb-env.sh") }}
+        iotdbEnvShChecksum: {{ .Files.Get "files/conf/iotdb-env.sh" | sha256sum | trunc 63 }}
+      {{- end }}
       {{- if (.Files.Glob "files/ext/udf/ivc-iotdb-udf-0.12.1.jar") }}
         ivcIotdbUdfJarChecksum: {{ .Files.Get "files/ext/udf/ivc-iotdb-udf-0.12.1.jar" | sha256sum | trunc 63 }}
       {{- end }}
