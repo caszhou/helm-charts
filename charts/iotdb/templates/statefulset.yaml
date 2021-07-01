@@ -95,6 +95,8 @@ spec:
             {{- if .Values.persistence.enabled }}
             - mountPath: /iotdb/data
               name: data
+            - mountPath: /iotdb/logs
+              name: logs
             {{- end }}
             {{- if (.Files.Glob "files/conf/**.properties") }}
             {{ range $path, $bytes := .Files.Glob "files/conf/**.properties" }}
@@ -189,6 +191,14 @@ spec:
   volumeClaimTemplates:
     - metadata:
         name: data
+        {{- with .Values.persistence.annotations  }}
+        annotations:
+          {{ toYaml . | nindent 10 }}
+        {{- end }}
+      spec:
+        {{ toYaml .Values.volumeClaimTemplate | nindent 8 }}
+    - metadata:
+        name: logs
         {{- with .Values.persistence.annotations  }}
         annotations:
           {{ toYaml . | nindent 10 }}
