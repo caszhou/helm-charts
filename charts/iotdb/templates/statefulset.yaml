@@ -69,6 +69,8 @@ spec:
           env:
             {{- toYaml .Values.env | nindent 12 }}
           {{- end }}
+          args:
+            - "printgc"
           {{- if .Values.livenessProbe.enabled }}
           livenessProbe:
             tcpSocket:
