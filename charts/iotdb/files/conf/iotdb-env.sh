@@ -179,11 +179,11 @@ fi
 # Minimum heap size
 #HEAP_NEWSIZE="2G"
 # maximum direct memory size
-#MAX_DIRECT_MEMORY_SIZE=${MAX_HEAP_SIZE}
+[[ "$ENABLE_CALCULATE_HEAP_SIZES" != "false" ]] && MAX_DIRECT_MEMORY_SIZE=${MAX_HEAP_SIZE}
 
 #true or false
 #DO NOT FORGET TO MODIFY THE PASSWORD FOR SECURITY (${IOTDB_CONF}/jmx.password and ${IOTDB_CONF}/jmx.access)
-JMX_LOCAL="true"
+JMX_LOCAL="false"
 
 JMX_PORT="31999"
 #only take effect when the jmx_local=false

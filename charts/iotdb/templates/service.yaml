@@ -15,3 +15,21 @@ spec:
       {{- end }}
   selector:
     {{- include "iotdb.selectorLabels" . | nindent 4 }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "iotdb.fullname" . }}-jmx
+  labels:
+    {{- include "iotdb.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.metrics.jmx.service.type }}
+  ports:
+    - name: jmx
+      port: {{ .Values.metrics.jmx.service.port }}
+      targetPort: {{ .Values.metrics.jmx.service.port }}
+      {{- if eq .Values.metrics.jmx.service.type "NodePort" }}
+      nodePort: {{ .Values.metrics.jmx.service.nodePort }}
+      {{- end }}
+  selector:
+    {{- include "iotdb.selectorLabels" . | nindent 4 }}

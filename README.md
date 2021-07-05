@@ -3,18 +3,22 @@ helm charts for iotdb
 
 # Single mode values
 ```yaml
-nameOverride: "iotdb"
-fullnameOverride: "iotdb"
-
 persistence:
   enabled: true
 
-volumeClaimTemplate:
+dataVolumeClaimTemplate:
   accessModes: ["ReadWriteOnce"]
   resources:
     requests:
       storage: 30Gi
-  storageClassName: iotdb-single
+  storageClassName: iotdb-single-data
+
+logsVolumeClaimTemplate:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 30Gi
+  storageClassName: iotdb-single-logs
 
 service:
   type: NodePort

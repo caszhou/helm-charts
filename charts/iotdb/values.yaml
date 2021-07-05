@@ -12,8 +12,6 @@ rpc:
 metric:
   port: 8181
 
-# The default is to deploy all pods serially. By setting this to parallel all pods are started at
-# the same time when bootstrapping the cluster
 podManagementPolicy: "Parallel"
 
 updateStrategy: RollingUpdate
@@ -35,16 +33,11 @@ securityContext: {}
 image:
   repository: apache/iotdb
   pullPolicy: IfNotPresent
-  # Overrides the image tag whose default is the chart appVersion.
   tag: 0.12.1-node
 
 serviceAccount:
-  # Specifies whether a service account should be created
   create: true
-  # Annotations to add to the service account
   annotations: {}
-  # The name of the service account to use.
-  # If not set and create is true, a name is generated using the fullname template
   name: ""
 
 env: {}
@@ -66,10 +59,6 @@ readinessProbe:
   failureThreshold: 5
 
 resources: {}
-  # We usually recommend not to specify default resources and to leave this as a conscious
-  # choice for the user. This also increases chances charts run on environments with little
-  # resources, such as Minikube. If you do want to specify resources, uncomment the following
-  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
   # limits:
   #   cpu: 100m
   #   memory: 128Mi
@@ -83,21 +72,16 @@ persistence:
 
 nodeSelector: {}
 
-# Hard means that by default pods will only be scheduled if there are enough nodes for them
-# and that they will never end up on the same node. Setting this to soft will do this "best effort"
 antiAffinity: hard
 
-# This is the node affinity settings as defined in
-# https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#node-affinity-beta-feature
 nodeAffinity: {}
 
-# By default this will make sure two pods don't end up on the same node
-# Changing this to a region would allow you to spread pods across regions
 antiAffinityTopologyKey: "kubernetes.io/hostname"
 
 tolerations: []
 
-volumeClaimTemplate: {}
+dataVolumeClaimTemplate: {}
+logsVolumeClaimTemplate: {}
 
 service:
   type: ClusterIP
@@ -140,6 +124,8 @@ grafana:
   nodeAffinity: {}
   tolerations: []
 
-
-
-
+metrics:
+  jmx:
+    service:
+      type: ClusterIP
+      port: 31999
