@@ -31,6 +31,9 @@ spec:
       {{- if (.Files.Glob "files/sbin/start-server.sh") }}
         startServerShChecksum: {{ .Files.Get "files/sbin/start-server.sh" | sha256sum | trunc 63 }}
       {{- end }}
+      {{- if (include "iotdb.metrics.jmx.createConfigmap" .) }}
+        jmxConfigmapYamlChecksum: {{ include (print $.Template.BasePath "/jmx-configmap.yaml") . | sha256sum | trunc 63 }}
+      {{- end }}
       labels:
         {{- include "iotdb.selectorLabels" . | nindent 8 }}
     spec:
@@ -128,6 +131,30 @@ spec:
               subPath: {{ $path | replace "files/sbin/" "" | b64enc | replace "=" "-" }}
             {{- end }}
             {{- end }}
+        {{- if .Values.metrics.jmx.enabled }}
+        - name: jmx-exporter
+          image: {{ template "iotdb.metrics.jmx.image" . }}
+          imagePullPolicy: {{ .Values.metrics.jmx.image.pullPolicy | quote }}
+          command:
+            - java
+            - -XX:+UnlockExperimentalVMOptions
+            - -XX:+UseCGroupMemoryLimitForHeap
+            - -XX:MaxRAMFraction=1
+            - -XshowSettings:vm
+            - -jar
+            - jmx_prometheus_httpserver.jar
+            - "32000"
+            - /etc/jmx-iotdb/jmx-iotdb-prometheus.yml
+          ports:
+            - name: metrics
+              containerPort: 32000
+          {{- if .Values.metrics.jmx.resources }}
+          resources: {{- toYaml .Values.metrics.jmx.resources | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            - name: jmx-config
+              mountPath: /etc/jmx-iotdb
+          {{- end }}
       volumes:
         {{- if (.Files.Glob "files/conf/**.properties") }}
         - name: iotdb-conf-override
@@ -150,6 +177,11 @@ spec:
           configMap:
             name: {{ template "iotdb.fullname" . }}-sbin-override-cm
             defaultMode: 0777
+        {{- end }}
+        {{- if .Values.metrics.jmx.enabled }}
+        - name: jmx-config
+          configMap:
+            name: {{ include "iotdb.metrics.jmx.configmapName" . }}
         {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:

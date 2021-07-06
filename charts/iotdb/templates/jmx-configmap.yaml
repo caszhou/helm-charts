@@ -1,0 +1,11 @@
+{{- if (include "iotdb.metrics.jmx.createConfigmap" .) }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "iotdb.fullname" . }}-jmx-configuration
+  labels:
+    {{- include "iotdb.labels" . | nindent 4 }}
+data:
+  jmx-iotdb-prometheus.yml: |-
+    {{- include "iotdb.tplValue" ( dict "value" .Values.metrics.jmx.config "context" $ ) | nindent 4 }}
+{{- end -}}

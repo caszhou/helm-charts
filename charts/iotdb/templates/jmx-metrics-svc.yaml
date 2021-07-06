@@ -1,0 +1,37 @@
+{{- if .Values.metrics.jmx.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ template "iotdb.fullname" . }}-jmx-metrics
+  labels:
+    {{- include "iotdb.labels" . | nindent 4 }}
+  {{- if .Values.metrics.jmx.service.annotations }}
+  annotations:
+    {{- if .Values.metrics.jmx.service.annotations }}
+    {{ include "iotdb.tplValue" ( dict "value" .Values.metrics.jmx.service.annotations "context" $) | nindent 4 }}
+    {{- end }}
+  {{- end }}
+spec:
+  type: {{ .Values.metrics.jmx.service.type }}
+  {{- if eq .Values.metrics.jmx.service.type "LoadBalancer" }}
+  {{- if .Values.metrics.jmx.service.loadBalancerIP }}
+  loadBalancerIP: {{ .Values.metrics.jmx.service.loadBalancerIP }}
+  {{- end }}
+  {{- if .Values.metrics.jmx.service.loadBalancerSourceRanges }}
+  loadBalancerSourceRanges: {{- toYaml .Values.metrics.jmx.service.loadBalancerSourceRanges | nindent 4 }}
+  {{- end }}
+  {{- end }}
+  {{- if and (eq .Values.metrics.jmx.service.type "ClusterIP") .Values.metrics.jmx.service.clusterIP }}
+  clusterIP: {{ .Values.metrics.jmx.service.clusterIP }}
+  {{- end }}
+  ports:
+    - name: http-metrics
+      port: {{ .Values.metrics.jmx.service.port }}
+      protocol: TCP
+      targetPort: metrics
+      {{- if and (or (eq .Values.metrics.jmx.service.type "NodePort") (eq .Values.metrics.jmx.service.type "LoadBalancer")) (not (empty .Values.metrics.jmx.service.nodePort)) }}
+      nodePort: {{ .Values.metrics.jmx.service.nodePort }}
+      {{- end }}
+  selector:
+    {{- include "iotdb.selectorLabels" . | nindent 4 }}
+{{- end }}

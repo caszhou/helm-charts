@@ -83,6 +83,16 @@ env:
     value: "10G"
 ```
 
+# Config jmx exporter and service monitor for prom operator
+```yaml
+metrics:
+  jmx:
+    enabled: true
+
+  serviceMonitor:
+    enabled: true
+```
+
 # Cluster mode
 ```yaml
 replicaCount: 3

@@ -91,3 +91,46 @@ Create the name of the service account to use
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}
 {{- end }}
+
+{{/*
+Return the proper JMX exporter image name
+*/}}
+{{- define "iotdb.metrics.jmx.image" -}}
+{{- $registryName := .Values.metrics.jmx.image.registry -}}
+{{- $repositoryName := .Values.metrics.jmx.image.repository -}}
+{{- $tag := .Values.metrics.jmx.image.tag | toString -}}
+{{- printf "%s/%s:%s" $registryName $repositoryName $tag -}}
+{{- end -}}
+
+{{/*
+Return the Iotdb configuration configmap
+*/}}
+{{- define "iotdb.metrics.jmx.configmapName" -}}
+{{- if .Values.metrics.jmx.existingConfigmap -}}
+    {{- printf "%s" (tpl .Values.metrics.jmx.existingConfigmap $) -}}
+{{- else -}}
+    {{- printf "%s-jmx-configuration" (include "iotdb.fullname" .) -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Renders a value that contains template.
+Usage:
+{{ include "inotdb.tplValue" ( dict "value" .Values.path.to.the.Value "context" $) }}
+*/}}
+{{- define "iotdb.tplValue" -}}
+    {{- if typeIs "string" .value }}
+        {{- tpl .value .context }}
+    {{- else }}
+        {{- tpl (.value | toYaml) .context }}
+    {{- end }}
+{{- end -}}
+
+{{/*
+Return true if a configmap object should be created
+*/}}
+{{- define "iotdb.metrics.jmx.createConfigmap" -}}
+{{- if and .Values.metrics.jmx.enabled .Values.metrics.jmx.config (not .Values.metrics.jmx.existingConfigmap) }}
+    {{- true -}}
+{{- end -}}
+{{- end -}}
