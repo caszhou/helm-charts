@@ -5,13 +5,13 @@ metadata:
   labels:
     {{- include "iotdb.labels" . | nindent 4 }}
 spec:
-  type: {{ .Values.service.type }}
+  type: {{ .Values.rpcService.type }}
   ports:
     - name: rpc
       port: {{ .Values.rpc.port }}
       targetPort: {{ .Values.rpc.port }}
-      {{- if eq .Values.service.type "NodePort" }}
-      nodePort: {{ .Values.service.nodePort }}
+      {{- if eq .Values.rpcService.type "NodePort" }}
+      nodePort: {{ .Values.rpcService.nodePort }}
       {{- end }}
   selector:
     {{- include "iotdb.selectorLabels" . | nindent 4 }}
@@ -21,15 +21,15 @@ kind: Service
 metadata:
   name: {{ include "iotdb.fullname" . }}-jmx
   labels:
-    {{- include "iotdb.labels" . | nindent 4 }}
+  {{- include "iotdb.labels" . | nindent 4 }}
 spec:
-  type: {{ .Values.metrics.jmx.service.type }}
+  type: {{ .Values.jmxService.type }}
   ports:
     - name: jmx
-      port: {{ .Values.metrics.jmx.service.port }}
-      targetPort: {{ .Values.metrics.jmx.service.port }}
-      {{- if eq .Values.metrics.jmx.service.type "NodePort" }}
-      nodePort: {{ .Values.metrics.jmx.service.nodePort }}
+      port: {{ .Values.jmx.port }}
+      targetPort: {{ .Values.jmx.port }}
+      {{- if eq .Values.jmxService.type "NodePort" }}
+      nodePort: {{ .Values.jmxService.nodePort }}
       {{- end }}
   selector:
     {{- include "iotdb.selectorLabels" . | nindent 4 }}

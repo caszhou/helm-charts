@@ -60,7 +60,7 @@ spec:
             - name: rpc
               containerPort: {{ .Values.rpc.port }}
             - name: jmx
-              containerPort: {{ .Values.metrics.jmx.service.port }}
+              containerPort: {{ .Values.jmx.port }}
             - name: sync
               containerPort: 5555
             - name: monitor

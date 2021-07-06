@@ -11,6 +11,8 @@ rpc:
   port: 6667
 metric:
   port: 8181
+jmx:
+  port: 31999
 
 podManagementPolicy: "Parallel"
 
@@ -83,11 +85,15 @@ tolerations: []
 dataVolumeClaimTemplate: {}
 logsVolumeClaimTemplate: {}
 
-service:
+rpcService:
   type: ClusterIP
   nodePort: null
 
 metricService:
+  type: ClusterIP
+  nodePort: null
+
+jmxService:
   type: ClusterIP
   nodePort: null
 
@@ -123,9 +129,3 @@ grafana:
   nodeSelector: {}
   nodeAffinity: {}
   tolerations: []
-
-metrics:
-  jmx:
-    service:
-      type: ClusterIP
-      port: 31999

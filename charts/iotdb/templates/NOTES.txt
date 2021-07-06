@@ -10,8 +10,8 @@
 
 ** Please be patient while the chart is being deployed **
 
-{{- if eq .Values.service.type "NodePort" }}
-IoTDB can be accessed by consumers via nodePort {{ .Values.service.nodePort }} on the nodes.
+{{- if eq .Values.rpcService.type "NodePort" }}
+IoTDB can be accessed by consumers via nodePort {{ .Values.rpcService.nodePort }} on the nodes.
 {{ else }}
 IoTDB can be accessed by consumers via port {{ $servicePort }} on the following DNS name from within your cluster:
 

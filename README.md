@@ -20,7 +20,7 @@ logsVolumeClaimTemplate:
       storage: 30Gi
   storageClassName: iotdb-single-logs
 
-service:
+rpcService:
   type: NodePort
   nodePort: 36667
 ```
@@ -61,6 +61,13 @@ grafana:
 metricService:
   type: NodePort
   nodePort: 38181
+```
+
+# Single mode with iotdb jmx node port
+```yaml
+metricService:
+  type: NodePort
+  nodePort: 31999
 ```
 
 # Config your self jmv options
