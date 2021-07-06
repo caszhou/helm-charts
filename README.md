@@ -83,7 +83,7 @@ env:
     value: "10G"
 ```
 
-# Config jmx exporter and service monitor for prom operator
+# Config jmx exporter and service monitor for prometheus operator
 ```yaml
 metrics:
   jmx:
