@@ -86,11 +86,53 @@ env:
 # Config jmx exporter and service monitor for prometheus operator
 ```yaml
 metrics:
-  jmx:
-    enabled: true
+  enabled: true
 
   serviceMonitor:
     enabled: true
+```
+
+# Config alerting for prometheus operator
+```yaml
+metrics:
+  enabled: true
+
+  serviceMonitor:
+    enabled: true
+
+    alerting:
+      enabled: true
+
+      rules:
+        - alert: IotdbServerOOMRisk
+          annotations:
+            description: Iotdb server oom risk.
+            summary: Iotdb server maybe occur oom, this requires your attention.
+          expr: |
+            100 -
+            (
+              node_memory_MemAvailable_bytes{job="node-exporter", instance="ivc010000000027worker"}
+            /
+              node_memory_MemTotal_bytes{job="node-exporter", instance="ivc010000000027worker"}
+            * 100
+            )
+            > 50
+          for: 1m
+          labels:
+            severity: warning
+        - alert: IotdbTooManyFailRequest
+          annotations:
+            description: Too many fail request.
+            summary: Too many fail request, this requires your attention.
+          expr: |
+            irate(org_apache_iotdb_service_monitor_globalreqfailnum[2m]) > 100
+          for: 1m
+          labels:
+            severity: warning
+
+      additionalLabels:
+        prometheus: k8s
+        role: alert-rules
 ```
 
 # Cluster mode

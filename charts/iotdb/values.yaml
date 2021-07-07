@@ -133,9 +133,9 @@ grafana:
 ## Prometheus Exporters / Metrics
 ##
 metrics:
-  jmx:
-    enabled: false
+  enabled: false
 
+  jmx:
     ## Bitnami JMX exporter image
     ## ref: https://hub.docker.com/r/bitnami/jmx-exporter/tags/
     ##
@@ -254,3 +254,19 @@ metrics:
     ##
     selector:
       prometheus: k8s
+
+    alerting:
+      enabled: false
+
+      ## Namespace in which Prometheus is running
+      ##
+      namespace: monitoring
+
+      ## Define individual alerting rules as required
+      ## ref: https://github.com/coreos/prometheus-operator/blob/master/Documentation/api.md#rulegroup
+      ##      https://prometheus.io/docs/prometheus/latest/configuration/alerting_rules/
+      rules: {}
+
+      ## Used to pass Labels that are used by the Prometheus installed in your cluster to select Prometheus Rules to work with
+      ## ref: https://github.com/coreos/prometheus-operator/blob/master/Documentation/api.md#prometheusspec
+      additionalLabels: {}

@@ -89,7 +89,7 @@ spec:
       affinity:
         {{- with .Values.grafana.nodeAffinity }}
         nodeAffinity:
-          {{ toYaml . | nindent 10 }}
+          {{- toYaml . | nindent 10 }}
         {{- end }}
       {{- end }}
       {{- with .Values.grafana.tolerations }}

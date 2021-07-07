@@ -101,7 +101,7 @@ spec:
         {{- end }}
         {{- with .Values.nodeAffinity }}
         nodeAffinity:
-          {{ toYaml . | nindent 10 }}
+          {{- toYaml . | nindent 10 }}
         {{- end }}
       {{- end }}
       {{- with .Values.tolerations }}

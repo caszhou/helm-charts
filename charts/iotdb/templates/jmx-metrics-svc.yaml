@@ -1,4 +1,4 @@
-{{- if .Values.metrics.jmx.enabled }}
+{{- if .Values.metrics.enabled }}
 apiVersion: v1
 kind: Service
 metadata:
@@ -8,7 +8,7 @@ metadata:
   {{- if .Values.metrics.jmx.service.annotations }}
   annotations:
     {{- if .Values.metrics.jmx.service.annotations }}
-    {{ include "iotdb.tplValue" ( dict "value" .Values.metrics.jmx.service.annotations "context" $) | nindent 4 }}
+    {{- include "iotdb.tplValue" ( dict "value" .Values.metrics.jmx.service.annotations "context" $) | nindent 4 }}
     {{- end }}
   {{- end }}
 spec:

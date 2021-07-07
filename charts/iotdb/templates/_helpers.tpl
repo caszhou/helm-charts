@@ -130,7 +130,7 @@ Usage:
 Return true if a configmap object should be created
 */}}
 {{- define "iotdb.metrics.jmx.createConfigmap" -}}
-{{- if and .Values.metrics.jmx.enabled .Values.metrics.jmx.config (not .Values.metrics.jmx.existingConfigmap) }}
+{{- if and .Values.metrics.enabled .Values.metrics.jmx.config (not .Values.metrics.jmx.existingConfigmap) }}
     {{- true -}}
 {{- end -}}
 {{- end -}}

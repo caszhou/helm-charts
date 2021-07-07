@@ -131,7 +131,7 @@ spec:
               subPath: {{ $path | replace "files/sbin/" "" | b64enc | replace "=" "-" }}
             {{- end }}
             {{- end }}
-        {{- if .Values.metrics.jmx.enabled }}
+        {{- if .Values.metrics.enabled }}
         - name: jmx-exporter
           image: {{ template "iotdb.metrics.jmx.image" . }}
           imagePullPolicy: {{ .Values.metrics.jmx.image.pullPolicy | quote }}
@@ -178,7 +178,7 @@ spec:
             name: {{ template "iotdb.fullname" . }}-sbin-override-cm
             defaultMode: 0777
         {{- end }}
-        {{- if .Values.metrics.jmx.enabled }}
+        {{- if .Values.metrics.enabled }}
         - name: jmx-config
           configMap:
             name: {{ include "iotdb.metrics.jmx.configmapName" . }}
@@ -214,7 +214,7 @@ spec:
         {{- end }}
         {{- with .Values.nodeAffinity }}
         nodeAffinity:
-          {{ toYaml . | nindent 10 }}
+          {{- toYaml . | nindent 10 }}
         {{- end }}
       {{- end }}
       {{- with .Values.tolerations }}
@@ -227,16 +227,16 @@ spec:
         name: data
         {{- with .Values.persistence.annotations  }}
         annotations:
-          {{ toYaml . | nindent 10 }}
+          {{- toYaml . | nindent 10 }}
         {{- end }}
       spec:
-        {{ toYaml .Values.dataVolumeClaimTemplate | nindent 8 }}
+        {{- toYaml .Values.dataVolumeClaimTemplate | nindent 8 }}
     - metadata:
         name: logs
         {{- with .Values.persistence.annotations  }}
         annotations:
-          {{ toYaml . | nindent 10 }}
+          {{- toYaml . | nindent 10 }}
         {{- end }}
       spec:
-        {{ toYaml .Values.logsVolumeClaimTemplate | nindent 8 }}
+        {{- toYaml .Values.logsVolumeClaimTemplate | nindent 8 }}
   {{- end }}

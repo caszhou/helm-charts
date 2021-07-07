@@ -1,0 +1,17 @@
+{{- if and .Values.metrics.enabled .Values.metrics.serviceMonitor.enabled .Values.metrics.serviceMonitor.alerting.enabled .Values.metrics.serviceMonitor.alerting.rules }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "iotdb.fullname" . }}-rules
+  namespace: {{ .Values.metrics.serviceMonitor.alerting.namespace }}
+  labels:
+    {{- include "iotdb.labels" . | nindent 4 }}
+    {{- if .Values.metrics.serviceMonitor.alerting.additionalLabels }}
+      {{- toYaml .Values.metrics.serviceMonitor.alerting.additionalLabels | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: iotdb
+      rules:
+        {{- toYaml .Values.metrics.serviceMonitor.alerting.rules | nindent 8 }}
+{{- end }}
