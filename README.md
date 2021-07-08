@@ -148,21 +148,23 @@ backup:
   toClaimName: "iotdb-backup-to"
 
   script: |-
-    #!/bin/bash -ex
+    #!/bin/bash -x
 
-    /iotdb/sbin/start-cli.sh -h ${host} -p ${port} -u ${user} -pw ${password} -e "REVOKE ivc-pdc FROM ivc-pdc; REVOKE ivc-iov FROM ivc-iov; REVOKE ivc-pems FROM ivc-pems; FLUSH; FULL MERGE;";
-    sleep 30;
+    set -e
 
-    folder=`date '+%Y-%m-%d_%H:%M:%S'`;
-    mkdir "/iotdb/backup/$folder";
+    folder=`date '+%Y-%m-%d_%H:%M:%S'`
+    mkdir /iotdb/backup/$folder
+
+    set +e
+
+    /iotdb/sbin/start-cli.sh -h ${host} -p ${port} -u ${user} -pw ${password} -e "REVOKE ivc-pdc FROM ivc-pdc; REVOKE ivc-iov FROM ivc-iov; REVOKE ivc-pems FROM ivc-pems; FLUSH; FULL MERGE;"
+    sleep 30
 
     from=/iotdb/data/*
-    to="/iotdb/backup/$folder/"
-    cp -r $from $to;
+    to=/iotdb/backup/$folder/
+    cp -r $from $to && find /iotdb/backup -mindepth 1 ! -regex "^/iotdb/backup/$folder\(/.*\)?" -delete
 
-    find /iotdb/backup -mindepth 1 ! -regex "^/iotdb/backup/$folder\(/.*\)?" -delete;
-
-    /iotdb/sbin/start-cli.sh -h ${host} -p ${port} -u ${user} -pw ${password} -e "GRANT ivc-pdc TO ivc-pdc; GRANT ivc-iov TO ivc-iov; GRANT ivc-pems TO ivc-pems;";
+    /iotdb/sbin/start-cli.sh -h ${host} -p ${port} -u ${user} -pw ${password} -e "GRANT ivc-pdc TO ivc-pdc; GRANT ivc-iov TO ivc-iov; GRANT ivc-pems TO ivc-pems;"
 ```
 
 ## pvc
