@@ -135,6 +135,108 @@ metrics:
         role: alert-rules
 ```
 
+# Config backup function
+
+## values
+
+```yaml
+backup:
+  enabled: true
+
+  fromClaimName: "iotdb-backup-from"
+
+  toClaimName: "iotdb-backup-to"
+
+  script: |-
+    #!/bin/bash -ex
+
+    /iotdb/sbin/start-cli.sh -h ${host} -p ${port} -u ${user} -pw ${password} -e "REVOKE ivc-pdc FROM ivc-pdc; REVOKE ivc-iov FROM ivc-iov; REVOKE ivc-pems FROM ivc-pems; FLUSH; FULL MERGE;";
+    sleep 30;
+
+    folder=`date '+%Y-%m-%d_%H:%M:%S'`;
+    mkdir "/iotdb/backup/$folder";
+
+    from=/iotdb/data/*
+    to="/iotdb/backup/$folder/"
+    cp -r $from $to;
+
+    find /iotdb/backup -mindepth 1 ! -regex "^/iotdb/backup/$folder\(/.*\)?" -delete;
+
+    /iotdb/sbin/start-cli.sh -h ${host} -p ${port} -u ${user} -pw ${password} -e "GRANT ivc-pdc TO ivc-pdc; GRANT ivc-iov TO ivc-iov; GRANT ivc-pems TO ivc-pems;";
+```
+
+## pvc
+```yaml
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: iotdb-backup-from
+spec:
+  accessModes:
+    - ReadWriteMany
+  capacity:
+    storage: 30Gi
+  flexVolume:
+    driver: alicloud/nas
+    options:
+      modeType: non-recursive
+      path: /middleware/middleware-data-iotdb-new-0-pvc-da9c7ec9-45a6-4c46-af79-56ac1d628676
+      server: aliyun-nas-server
+      vers: '4.0'
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: iotdb-backup-from
+  volumeMode: Filesystem
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: iotdb-backup-from
+  namespace: middleware
+spec:
+  accessModes:
+    - ReadWriteMany
+  volumeMode: Filesystem
+  resources:
+    requests:
+      storage: 30Gi
+  storageClassName: "iotdb-backup-from"
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: iotdb-backup-to
+spec:
+  accessModes:
+    - ReadWriteMany
+  capacity:
+    storage: 30Gi
+  flexVolume:
+    driver: alicloud/nas
+    options:
+      modeType: non-recursive
+      path: /mnt/backup/iotdb/prod-new
+      server: aliyun-nas-server
+      vers: '4.0'
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: iotdb-backup-to
+  volumeMode: Filesystem
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: iotdb-backup-to
+  namespace: middleware
+spec:
+  accessModes:
+    - ReadWriteMany
+  volumeMode: Filesystem
+  resources:
+    requests:
+      storage: 30Gi
+  storageClassName: "iotdb-backup-to"
+
+```
+
 # Cluster mode
 ```yaml
 replicaCount: 3

@@ -1,0 +1,11 @@
+{{- if and .Values.backup.enabled .Values.persistence.enabled .Values.backup.script }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "iotdb.fullname" . }}-backup-script
+  labels:
+    {{- include "iotdb.labels" . | nindent 4 }}
+data:
+  backup.sh: |-
+    {{- include "iotdb.tplValue" ( dict "value" .Values.backup.script "context" $ ) | nindent 4 }}
+{{ end }}

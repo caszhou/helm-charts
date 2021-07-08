@@ -1,0 +1,88 @@
+{{- $fullname := include "iotdb.fullname" . -}}
+{{- $releaseNamespace := .Release.Namespace -}}
+{{- $clusterDomain := .Values.clusterDomain -}}
+{{- $servicePort := int .Values.rpc.port -}}
+{{- if and .Values.backup.enabled .Values.persistence.enabled .Values.backup.script }}
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: {{ include "iotdb.fullname" . }}-backup
+  labels:
+    {{- include "iotdb.labels" . | nindent 4 }}
+spec:
+  schedule: {{ .Values.backup.schedule | quote }}
+  startingDeadlineSeconds: {{ .Values.backup.startingDeadlineSeconds }}
+  concurrencyPolicy: {{ .Values.backup.concurrencyPolicy }}
+  suspend: {{ .Values.backup.suspend }}
+  successfulJobsHistoryLimit: {{ .Values.backup.successfulJobsHistoryLimit }}
+  failedJobsHistoryLimit: {{ .Values.backup.failedJobsHistoryLimit }}
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          annotations:
+            {{- with .Values.podAnnotations }}
+              {{- toYaml . | nindent 12 }}
+            {{- end }}
+            backupConfigmapYamlChecksum: {{ include (print $.Template.BasePath "/backup-configmap.yaml") . | sha256sum | trunc 63 }}
+          labels:
+            {{- include "iotdb.selectorLabels" . | nindent 12 }}
+        spec:
+          {{- if .Values.imagePullSecrets }}
+          {{- with .Values.imagePullSecrets }}
+          imagePullSecrets:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- end }}
+          serviceAccountName: {{ include "iotdb.serviceAccountName" . }}
+          {{- if .Values.podSecurityContext }}
+          securityContext:
+            {{- toYaml .Values.podSecurityContext | nindent 12 }}
+          {{- end }}
+          initContainers:
+            - name: wait-for-iotdb
+              image: busybox:1.33.1
+              imagePullPolicy: IfNotPresent
+              command: ['sh', '-c', 'for i in $(seq 1 60); do nc -v -z -w3 {{ include "iotdb.fullname" . }} {{ .Values.rpc.port }} && exit 0 || sleep 5; done; exit 1']
+          restartPolicy: Never
+          containers:
+            - name: {{ .Chart.Name }}
+              {{- if .Values.securityContext }}
+              securityContext:
+                {{- toYaml .Values.securityContext | nindent 16 }}
+              {{- end }}
+              image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+              imagePullPolicy: {{ .Values.image.pullPolicy }}
+              command:
+                - '/bin/sh'
+                - '-c'
+              args:
+                - '/iotdb/cli/backup.sh'
+              env:
+                - name: host
+                  value: "{{ printf "%s-%d.%s-headless.%s.svc.%s" $fullname 0 $fullname $releaseNamespace $clusterDomain }}"
+                - name: port
+                  value: "{{ $servicePort }}"
+                - name: user
+                  value: "root"
+                - name: password
+                  value: "iotdb@IVC"
+              volumeMounts:
+                - mountPath: /iotdb/data
+                  name: data
+                - mountPath: /iotdb/backup
+                  name: bakcup
+                - mountPath: /iotdb/cli
+                  name: script
+          volumes:
+            - name: data
+              persistentVolumeClaim:
+                claimName: {{ .Values.backup.fromClaimName }}
+            - name: bakcup
+              persistentVolumeClaim:
+                claimName: {{ .Values.backup.toClaimName }}
+            - name: script
+              configMap:
+                name: {{ template "iotdb.fullname" . }}-backup-script
+                defaultMode: 0777
+{{- end }}

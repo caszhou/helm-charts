@@ -270,3 +270,41 @@ metrics:
       ## Used to pass Labels that are used by the Prometheus installed in your cluster to select Prometheus Rules to work with
       ## ref: https://github.com/coreos/prometheus-operator/blob/master/Documentation/api.md#prometheusspec
       additionalLabels: {}
+
+# CronJob backup
+#
+backup:
+  enabled: false
+
+  # https://kubernetes.io/docs/tasks/job/automated-tasks-with-cron-jobs/#schedule
+  #
+  schedule: "0 5 * * *"
+
+  # Data claim name
+  #
+  fromClaimName: ""
+
+  # Backup claim name
+  #
+  toClaimName: ""
+
+  # Backup script
+  #
+  script: ""
+
+  # https://kubernetes.io/docs/tasks/job/automated-tasks-with-cron-jobs/#starting-deadline
+  #
+  startingDeadlineSeconds: 300
+
+  # https://kubernetes.io/docs/tasks/job/automated-tasks-with-cron-jobs/#starting-deadline
+  #
+  concurrencyPolicy: Forbid
+
+  # https://kubernetes.io/docs/tasks/job/automated-tasks-with-cron-jobs/#starting-deadline
+  #
+  suspend: false
+
+  # https://kubernetes.io/docs/tasks/job/automated-tasks-with-cron-jobs/#jobs-history-limits
+  #
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 1
