@@ -216,7 +216,7 @@ spec:
     driver: alicloud/nas
     options:
       modeType: non-recursive
-      path: /mnt/backup/iotdb/prod-new
+      path: /backup/iotdb/prod-new
       server: aliyun-nas-server
       vers: '4.0'
   persistentVolumeReclaimPolicy: Retain
