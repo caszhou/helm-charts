@@ -53,6 +53,11 @@ spec:
           ports:
             - name: tomcat
               containerPort: {{ .Values.grafana.tomcat.port }}
+          command:
+            - "java"
+            - "-jar"
+            - "-Dspring.config.location=/iotdb-grafana/application.properties"
+            - "/iotdb-grafana/iotdb-grafana.war"
           {{- if .Values.grafana.livenessProbe.enabled }}
           livenessProbe:
             tcpSocket:
