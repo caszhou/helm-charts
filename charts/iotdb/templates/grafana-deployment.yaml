@@ -34,7 +34,7 @@ spec:
             - |
               sed -i 's#^spring.datasource.url.*$#spring.datasource.url={{ .Values.grafana.config.url }}#g' /iotdb-grafana/application.properties;
               sed -i 's#^spring.datasource.username.*$#spring.datasource.username={{ .Values.grafana.config.username }}#g' /iotdb-grafana/application.properties;
-              sed -i 's#^spring.datasource.password.*$#spring.datasource.username={{ .Values.grafana.config.password }}#g' /iotdb-grafana/application.properties;
+              sed -i 's#^spring.datasource.password.*$#spring.datasource.password={{ .Values.grafana.config.password }}#g' /iotdb-grafana/application.properties;
               cp -R /iotdb-grafana/* /iotdb-grafana-sed/;
           volumeMounts:
             - name: application-properties
