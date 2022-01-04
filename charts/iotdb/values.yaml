@@ -35,7 +35,7 @@ securityContext: {}
 image:
   repository: apache/iotdb
   pullPolicy: IfNotPresent
-  tag: 0.12.1-node
+  tag: 0.12.4-node
 
 serviceAccount:
   create: true

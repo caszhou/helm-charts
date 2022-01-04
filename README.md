@@ -38,7 +38,7 @@ grafana:
     # application path: /iotdb-grafana
     repository: registry-vpc.cn-hangzhou.aliyuncs.com/ivehcore-base/iotdb-grafana
     pullPolicy: IfNotPresent
-    tag: 0.12.1
+    tag: 0.12.4
   imagePullSecrets:
     - name: docker-vpc
   nodeAffinity:
